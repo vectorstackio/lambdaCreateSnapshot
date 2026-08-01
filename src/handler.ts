@@ -11,36 +11,40 @@ type Event = {
 
 const client = new EC2Client({})
 
-export async function handler(event: Event) {
+export const handler = async (event: Event) => {
+  try {
+    const body = JSON.parse(event.body)
+    const { volumeId } = body
 
-  const body = JSON.parse(event.body)
+    if (!volumeId) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          error: 'volumeId is required'
+        })
+      }
+    }
 
-  const {
-    volumeId
-  } = body
+    const result = await client.send(
+      new CreateSnapshotCommand({
+        VolumeId: volumeId,
+        Description:
+          'Created by AI Cloud Operations Copilot'
+      })
+    )
 
-  if (!volumeId) {
     return {
-      statusCode: 400,
+      statusCode: 200,
       body: JSON.stringify({
-        error: 'volumeId is required'
+        snapshotId: result.SnapshotId,
+        state: result.State
       })
     }
-  }
-
-  const result = await client.send(
-    new CreateSnapshotCommand({
-      VolumeId: volumeId,
-      Description:
-        'Created by AI Cloud Operations Copilot'
-    })
-  )
-
-  return {
-    statusCode: 200,
-    body: JSON.stringify({
-      snapshotId: result.SnapshotId,
-      state: result.State
-    })
+  } catch (err) {
+    console.error('Error in createSnapshotLambda:', err)
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: 'Internal server error in createSnapshotLambda' })
+    }
   }
 }
