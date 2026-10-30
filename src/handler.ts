@@ -40,8 +40,8 @@ export const handler = async (event: Event) => {
         state: result.State
       })
     }
-  } catch (err) {
-    console.error('Error in createSnapshotLambda:', err)
+  } catch {
+    console.error('Error in createSnapshotLambda')
     return {
       statusCode: 500,
       body: JSON.stringify({ error: 'Internal server error in createSnapshotLambda' })
